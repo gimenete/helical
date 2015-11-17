@@ -6,11 +6,22 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [
+    "generator",
+    "nunjucks"
+  ],
   "author": "Alberto Gimeno <gimenete@gimenete.net>",
   "license": "MIT",
   "dependencies": {
     "mkdirp": "^0.5.1",
     "nunjucks": "^2.1.0",
     "yargs": "^3.30.0"
+  },
+  "bin": {
+    "helical": "./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gimenete/helical.git"
   }
 }
