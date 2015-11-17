@@ -1,0 +1,16 @@
+{
+  "name": "helical",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alberto Gimeno <gimenete@gimenete.net>",
+  "license": "MIT",
+  "dependencies": {
+    "mkdirp": "^0.5.1",
+    "nunjucks": "^2.1.0",
+    "yargs": "^3.30.0"
+  }
+}

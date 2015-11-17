@@ -1,0 +1,36 @@
+{
+  "projectName": "project_name",
+  "entities": [
+    {
+      "name": "User",
+      "fields": [
+        {
+          "name": "email",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        }
+      ],
+      "endpoints": [
+        {
+          "action": "show",
+          "method": "get"
+        },
+        {
+          "action": "create",
+          "method": "post"
+        },
+        {
+          "action": "edit",
+          "method": "put"
+        },
+        {
+          "action": "delete",
+          "method": "delete"
+        }
+      ]
+    }
+  ]
+}
