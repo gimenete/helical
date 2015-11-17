@@ -6,7 +6,7 @@ Helical is a general purpose code generator. It takes a data model definition an
 
 It is just a JSON file with no given structure. The structure depends on the templates used. This file can be stored at any location.
 
-# Generators
+# Manifest and generators
 
 You need a manifest file and a set of templates. You have to put all of them in the same directory. The templates can be in subdirectories, but
 the manifest file must always be in the root of the directory and it must be called `helical.json`.
@@ -15,8 +15,8 @@ The templating language used in all the templates is [nunjucks](https://mozilla.
 
 The manifest file is a JSON file with two sections:
 
-- Generators
-- Options (future use)
+- `generators`
+- `options`
 
 Here there is an example:
 
@@ -40,7 +40,12 @@ Here there is an example:
     }
   ],
   "options": [
-
+    {
+      "name": "css",
+      "describe": "CSS preprocessor",
+      "type": "string",
+      "choices": ["less", "saas"]
+    }
   ]
 }
 ```
@@ -86,6 +91,8 @@ And this could be a data model suitable of being processed by these generators:
 }
 ```
 
+## Generators
+
 Every generator must have at least these attributes: `source`, `path` and `foreach`.
 
 - `source`: this is the relative path to the template.
@@ -102,6 +109,7 @@ Every template, including the inlined templates to generate the filename (`path`
 - `object`: the object being processed.
 - `ancestors`: an array of ancestor objects.
 - `root`: the root of the data model.
+- `options`: see section `options` below.
 
 In the example above the second generator will be processed for each endpoint of each entity. Every time the `endpoint.js` template
 is processed it will receive these objects:
@@ -110,6 +118,31 @@ is processed it will receive these objects:
 - `ancestors`: in this example `ancestors[0]` will reference the parent entity of this endpoint.
 - `root`: the root of the data model.
 
+## Options
+
+Optionally you can define an array of `options` in your `helical.json` file. These are values that the user can pass in the command line interface
+to the generators. Each option has the following attributes:
+
+- `name`. The name of the option. If you have an option called `css` in your templates you can use `options.css` to access the value
+- `describe` (optional). A description of this option
+- `type` (optional). The type of this option. Can be `string`, `array`, `boolean`, `count` or `string`. See the [yargs](https://www.npmjs.com/package/yargs) documentation about this.
+- `choices` (optional). You can specify an array of allowed values for this option.
+- `default` (optional). The default value for this option.
+
+If you specify a not boolean option and there's not a default value and the user didn't specify the option in the command line then the application will exit with a message like this:
+
+```
+Usage: helical --model model.json --generator /path/to/some-generator
+
+Options:
+  --model, -m      The data model file                                                             [string] [required]
+  --generator, -g  The directory that contains the helical generator                               [string] [required]
+  --output, -o     Output directory                                                                [string] [required]
+  -h, --help       Show help                                                                                 [boolean]
+  --css            CSS preprocessor                                      [string] [required] [choices: "less", "saas"]
+
+Missing required argument: css
+```
 
 # Installation
 
@@ -122,7 +155,7 @@ npm install helical -g
 In this repository there is an example in the `example` directory. You can run it with:
 
 ```
-helical --model example/model.json  --generator example/ -o output/
+helical --model example/model.json  --generator example/ -o output/ --css less
 ```
 
 This is the output:
@@ -148,4 +181,4 @@ You can avoid some objects to be processed by returning an empty file name in th
 }
 ```
 
-In this case endpoints with `{ "action": "delete" }` won't generate any output.
+In this case endpoints with `"action": "delete"` won't generate any output.

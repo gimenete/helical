@@ -4,8 +4,9 @@ var fs = require('fs')
 var path = require('path')
 var mkdirp = require('mkdirp')
 var nunjucks = require('nunjucks')
+var _ = require('underscore')
 
-function run(model, helical, basedir, outputdir) {
+function run(model, helical, basedir, outputdir, optionValues) {
   var generators = helical.generators
 
   generators.forEach(function(generator) {
@@ -19,6 +20,7 @@ function run(model, helical, basedir, outputdir) {
           root: root,
           object: parent,
           ancestors: ancestors,
+          options: optionValues,
         }
         var filename = nunjucks.renderString(generator.path, options)
         if (!filename) return // ability to ignore some objects
@@ -45,7 +47,6 @@ function run(model, helical, basedir, outputdir) {
 
 if (module.id === require.main.id) {
   var yargs = require('yargs')
-  var argv = yargs
     .usage('Usage: $0 --model model.json --generator /path/to/some-generator')
     .options({
       'model': {
@@ -67,10 +68,11 @@ if (module.id === require.main.id) {
         type: 'string',
       },
     })
-    .wrap(yargs.terminalWidth())
+    .wrap(require('yargs').terminalWidth())
     .help('h')
     .alias('h', 'help')
-    .argv
+
+  var argv = yargs.argv
 
   if (!fs.existsSync(argv.model)) {
     console.error('File not found %s', argv.model)
@@ -112,5 +114,20 @@ if (module.id === require.main.id) {
     process.exit(1)
   }
 
-  run(model, helical, argv.generator, argv.output)
+  var generator = argv.generator
+  var output = argv.output
+  var options = {}
+  helical.options.forEach(function(option) {
+    var opt = _.pick(option, 'describe', 'type', 'choices', 'default')
+    opt.demand = true
+    options[option.name] = opt
+  })
+  yargs.options(options)
+  var argv = yargs.argv
+  var optionValues = {}
+  helical.options.forEach(function(option) {
+    optionValues[option.name] = argv[option.name]
+  })
+
+  run(model, helical, generator, output, optionValues)
 }

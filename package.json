@@ -1,6 +1,6 @@
 {
   "name": "helical",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -15,6 +15,7 @@
   "dependencies": {
     "mkdirp": "^0.5.1",
     "nunjucks": "^2.1.0",
+    "underscore": "^1.8.3",
     "yargs": "^3.30.0"
   },
   "bin": {
