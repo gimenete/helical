@@ -1,6 +1,6 @@
 {
   "name": "helical",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -13,7 +13,9 @@
   "author": "Alberto Gimeno <gimenete@gimenete.net>",
   "license": "MIT",
   "dependencies": {
+    "chalkline": "0.0.4",
     "mkdirp": "^0.5.1",
+    "ncp": "^2.0.0",
     "nunjucks": "^2.1.0",
     "underscore": "^1.8.3",
     "yargs": "^3.30.0"

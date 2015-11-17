@@ -24,17 +24,17 @@ Here there is an example:
 {
   "generators": [
     {
-      "source": "entity.js",
+      "source": "generators/entity.js",
       "path": "models/{{ object.name | lower }}.js",
       "foreach": "entities"
     },
     {
-      "source": "endpoint.js",
+      "source": "generators/endpoint.js",
       "path": "controllers/{{ ancestors[0].name | lower }}-{{ object.action | lower }}.js",
       "foreach": "entities.endpoints"
     },
     {
-      "source": "app.js",
+      "source": "generators/app.js",
       "path": "index.js",
       "foreach": ""
     }
@@ -138,11 +138,25 @@ Options:
   --model, -m      The data model file                                                             [string] [required]
   --generator, -g  The directory that contains the helical generator                               [string] [required]
   --output, -o     Output directory                                                                [string] [required]
+  --force, -f      Override files existing files                                                             [boolean]
   -h, --help       Show help                                                                                 [boolean]
   --css            CSS preprocessor                                      [string] [required] [choices: "less", "saas"]
 
 Missing required argument: css
 ```
+
+## Static files
+
+You can create a `static` directory and everything on it will be copied to the output directory. This is a good place to put files that are not plain text such
+as images, fonts, or simply plain text files that don't need to be processed.
+
+## Next steps message
+
+You can render a message after all the files are generated creating a template `next-steps.txt`. This template will have access to the `root` and `options` objects.
+
+# Overriding files
+
+By default `helical` will not override existing files. But you can use the `--force` option to change this behavior.
 
 # Installation
 
@@ -155,7 +169,11 @@ npm install helical -g
 In this repository there is an example in the `example` directory. You can run it with:
 
 ```
-helical --model example/model.json  --generator example/ -o output/ --css less
+helical \
+  --model example/model.json \
+  --generator example \
+  --output output \
+  --css less
 ```
 
 This is the output:

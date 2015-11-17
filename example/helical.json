@@ -1,17 +1,17 @@
 {
   "generators": [
     {
-      "source": "entity.js",
+      "source": "generators/entity.js",
       "path": "models/{{ object.name | lower }}.js",
       "foreach": "entities"
     },
     {
-      "source": "endpoint.js",
+      "source": "generators/endpoint.js",
       "path": "controllers/{{ ancestors[0].name | lower }}-{{ object.action | lower }}.js",
       "foreach": "entities.endpoints"
     },
     {
-      "source": "app.js",
+      "source": "generators/app.js",
       "path": "index.js",
       "foreach": ""
     }

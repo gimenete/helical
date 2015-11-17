@@ -5,8 +5,9 @@ var path = require('path')
 var mkdirp = require('mkdirp')
 var nunjucks = require('nunjucks')
 var _ = require('underscore')
+var ncp = require('ncp')
 
-function run(model, helical, basedir, outputdir, optionValues) {
+function run(model, helical, basedir, outputdir, force, optionValues) {
   var generators = helical.generators
 
   generators.forEach(function(generator) {
@@ -25,12 +26,15 @@ function run(model, helical, basedir, outputdir, optionValues) {
         var filename = nunjucks.renderString(generator.path, options)
         if (!filename) return // ability to ignore some objects
         filename = path.join(outputdir, filename)
-        var dirname = path.dirname(filename)
-        mkdirp.sync(dirname)
-        var output = nunjucks.renderString(source, options)
-        // TODO: omit if already exists, unless --force is used
-        fs.writeFileSync(filename, output)
-        console.log('Wrote', filename)
+        if (!fs.existsSync(filename) || force) {
+          var dirname = path.dirname(filename)
+          mkdirp.sync(dirname)
+          var output = nunjucks.renderString(source, options)
+          fs.writeFileSync(filename, output)
+          console.log('Wrote', filename)
+        } else {
+          console.log('Skipping', filename)
+        }
       } else {
         var anc = [parent].concat(ancestors)
         var arr = parent && parent[component]
@@ -41,6 +45,27 @@ function run(model, helical, basedir, outputdir, optionValues) {
       }
     }
     next(root, components, 0, [])
+  })
+
+  ncp(path.join(basedir, 'static'), outputdir, function (err) {
+    if (err) {
+      err.forEach(function(err) {
+        if (err.code !== 'ENOENT') {
+          console.error(err)
+        }
+      })
+    }
+
+    var nextSteps = path.join(basedir, 'next-steps.txt')
+    if (fs.existsSync(nextSteps)) {
+      var source = fs.readFileSync(nextSteps, 'utf8')
+      var output = nunjucks.renderString(source, {
+        root: model,
+        options: options,
+      })
+      require('chalkline').white()
+      console.log(output)
+    }
   })
 }
 
@@ -66,6 +91,11 @@ if (module.id === require.main.id) {
         demand: true,
         describe: 'Output directory',
         type: 'string',
+      },
+      'force': {
+        alias: 'f',
+        describe: 'Override files existing files',
+        type: 'boolean',
       },
     })
     .wrap(require('yargs').terminalWidth())
@@ -116,6 +146,7 @@ if (module.id === require.main.id) {
 
   var generator = argv.generator
   var output = argv.output
+  var force = argv.force
   var options = {}
   helical.options.forEach(function(option) {
     var opt = _.pick(option, 'describe', 'type', 'choices', 'default')
@@ -129,5 +160,5 @@ if (module.id === require.main.id) {
     optionValues[option.name] = argv[option.name]
   })
 
-  run(model, helical, generator, output, optionValues)
+  run(model, helical, generator, output, force, optionValues)
 }

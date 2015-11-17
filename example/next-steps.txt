@@ -1,0 +1,9 @@
+Project `{{ root.projectName }}` generated.
+
+* Install dependencies
+
+Now run `npm install` to install the dependencies
+
+* Run
+
+After the dependencies have been installed run `npm start` to run the project
