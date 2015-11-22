@@ -21,7 +21,7 @@
       "name": "css",
       "describe": "CSS preprocessor",
       "type": "string",
-      "choices": ["less", "saas"]
+      "choices": ["less", "sass"]
     }
   ]
 }

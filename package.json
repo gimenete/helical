@@ -1,6 +1,6 @@
 {
   "name": "helical",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -14,10 +14,12 @@
   "license": "MIT",
   "dependencies": {
     "chalkline": "0.0.4",
+    "fs-extra": "^0.26.2",
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
     "nunjucks": "^2.1.0",
     "underscore": "^1.8.3",
+    "watch": "^0.16.0",
     "yargs": "^3.30.0"
   },
   "bin": {

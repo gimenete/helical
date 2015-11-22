@@ -44,7 +44,7 @@ Here there is an example:
       "name": "css",
       "describe": "CSS preprocessor",
       "type": "string",
-      "choices": ["less", "saas"]
+      "choices": ["less", "sass"]
     }
   ]
 }
@@ -140,7 +140,7 @@ Options:
   --output, -o     Output directory                                                                [string] [required]
   --force, -f      Override files existing files                                                             [boolean]
   -h, --help       Show help                                                                                 [boolean]
-  --css            CSS preprocessor                                      [string] [required] [choices: "less", "saas"]
+  --css            CSS preprocessor                                      [string] [required] [choices: "less", "sass"]
 
 Missing required argument: css
 ```
@@ -157,6 +157,10 @@ You can render a message after all the files are generated creating a template `
 # Overriding files
 
 By default `helical` will not override existing files. But you can use the `--force` option to change this behavior.
+
+# Watching for file changes
+
+While developing helical generators or just to see interactively how the generators change when editing your data model, you can use the `--watch` option in the command line.
 
 # Installation
 
