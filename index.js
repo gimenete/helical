@@ -165,7 +165,7 @@ Helical.prototype.run = function(printNextSteps, changedFile, callback) {
   changedFile = changedFile ? path.resolve(outputdir, changedFile) : changedFile
 
   generators.forEach(function(generator) {
-    if (changedFile && path.resolve(outputdir, generator.source) !== changedFile) {
+    if (changedFile && path.resolve(basedir, generator.source) !== changedFile) {
       return
     }
     var source = fs.readFileSync(path.join(basedir, generator.source), 'utf8')
