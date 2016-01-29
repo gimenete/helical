@@ -9,50 +9,60 @@ var ncp = require('ncp')
 var fse = require('fs-extra')
 var util = require('util')
 var watch = require('watch')
+var notifier = require('node-notifier')
 
-function Helical() {
+var Helical = module.exports = function() {}
+
+Helical.prototype.notify = function(title, message) {
+  if (!this.notifier) return
+  notifier.notify({
+    title: 'Error',
+    message: message,
+  })
 }
 
-function error() {
-  return new Error(util.format.apply(null, arguments))
+Helical.prototype.error = function() {
+  var message = util.format.apply(null, arguments)
+  this.notify('Error', message)
+  return new Error(message)
 }
 
 Helical.prototype.setModel = function(model) {
   if (!fs.existsSync(model)) {
-    throw error('File not found %s', model)
+    throw this.error('File not found %s', model)
   }
 
   if (fs.lstatSync(model).isDirectory()) {
-    throw error('Data model file is a directory: %s', model)
+    throw this.error('Data model file is a directory: %s', model)
   }
 
   try {
     this.model = JSON.parse(fs.readFileSync(model))
   } catch (err) {
-    throw error('Error while parsing data model file: %s\n%s', model, err.stack || String(err))
+    throw this.error('Error while parsing data model file: %s\n%s', model, err.stack || String(err))
   }
 
   this.modelFile = model
 }
 
 Helical.prototype.setGenerator = function(generator) {
-  if (!fs.existsSync(argv.generator)) {
-    throw error('Directory not found %s', argv.generator)
+  if (!fs.existsSync(generator)) {
+    throw this.error('Directory not found %s', generator)
   }
 
-  var manifest = path.join(argv.generator, 'helical.json')
+  if (!fs.lstatSync(generator).isDirectory()) {
+    throw this.error('Generator option should be a directory: %s', generator)
+  }
+
+  var manifest = path.join(generator, 'helical.json')
   if (!fs.existsSync(manifest)) {
-    throw error('File not found %s', manifest)
-  }
-
-  if (!fs.lstatSync(argv.generator).isDirectory()) {
-    throw error('Generator option should be a directory: %s', argv.generator)
+    throw this.error('File not found %s', manifest)
   }
 
   try {
     this.manifest = JSON.parse(fs.readFileSync(manifest))
   } catch (err) {
-    throw error('Error while parsing manifest file: %s\n%s', manifest, err.stack || String(err))
+    throw this.error('Error while parsing manifest file: %s\n%s', manifest, err.stack || String(err))
   }
 
   this.manifestFile = manifest
@@ -60,39 +70,45 @@ Helical.prototype.setGenerator = function(generator) {
 }
 
 Helical.prototype.setOutput = function(output) {
-  this.output = output;
+  this.output = output
 }
 
 Helical.prototype.setForce = function(force) {
-  this.force = force;
+  this.force = force
+}
+
+Helical.prototype.setNotify = function(notify) {
+  this.notifier = notify
 }
 
 Helical.prototype.startWatching = function() {
-  var self = this
-
-  watch.watchTree(this.generator, function(f, curr, prev) {
+  watch.watchTree(this.generator, (f, curr, prev) => {
     if (typeof f === 'object' && prev === null && curr === null) {
       return
     }
     console.log('Detected file change on generator directory (%s)', f)
-    self.run(false, f)
+    this.run(false, f)
   })
 
-  fs.watch(this.modelFile, function() {
+  var watchOptions = {
+    ignoreDotFiles: true,
+  }
+  fs.watch(this.modelFile, watchOptions, () => {
     console.log('Detected file change on model file')
-    var model = self.modelFile
+    var model = this.modelFile
     try {
-      self.model = JSON.parse(fs.readFileSync(model))
+      this.model = JSON.parse(fs.readFileSync(model))
     } catch (err) {
-      console.error('Error while parsing data model file: %s\n%s', model, err.stack || String(err))
+      this.notify('Error', 'Error parsing data model file')
+      console.error('Error parsing data model file: %s\n%s', model, err.stack || String(err))
     }
 
-    self.run(false)
+    this.run(false)
   })
 
-  fs.watch(this.manifestFile, function() {
+  fs.watch(this.manifestFile, () => {
     console.log('Detected file change on manifest file')
-    self.run(false)
+    this.run(false)
   })
 }
 
@@ -100,17 +116,19 @@ Helical.prototype.setOptions = function(options) {
   this.options = options;
 }
 
-Helical.prototype.copyStaticFiles = function(base) {
+Helical.prototype.copyStaticFiles = function(base, callback) {
   var outputdir = this.output
 
-  ncp(base, outputdir, function (err) {
+  ncp(base, outputdir, (err) => {
     if (err) {
-      err.forEach(function(err) {
+      err.forEach((err) => {
         if (err.code !== 'ENOENT') {
+          this.notify('Error', 'Error copying files: '+err.message)
           console.error(err)
         }
       })
     }
+    callback()
   })
 }
 
@@ -130,20 +148,24 @@ Helical.prototype.printNextSteps = function() {
       require('chalkline').white()
       console.log(output)
     } catch (err) {
-      console.error('Error while printing next steps', err.message)
+      this.notify('Error', 'Error printing next steps')
+      console.error('Error printing next steps', err.message)
     }
   }
 }
 
-Helical.prototype.run = function(printNextSteps, changedFile) {
+Helical.prototype.run = function(printNextSteps, changedFile, callback) {
   var generators = this.manifest.generators
   var root = this.model
   var basedir = this.generator
   var outputdir = this.output
   var force = this.force
+  var self = this
+
+  changedFile = changedFile ? path.resolve(outputdir, changedFile) : changedFile
 
   generators.forEach(function(generator) {
-    if (changedFile && generator.source !== changedFile) {
+    if (changedFile && path.resolve(outputdir, generator.source) !== changedFile) {
       return
     }
     var source = fs.readFileSync(path.join(basedir, generator.source), 'utf8')
@@ -160,7 +182,8 @@ Helical.prototype.run = function(printNextSteps, changedFile) {
         try {
           var filename = nunjucks.renderString(generator.path, options)
         } catch (err) {
-          console.error('Error while executing template %s %s', generator.path, err.message)
+          self.notify('Error', 'Error executing template')
+          console.error('Error executing template %s %s', generator.path, err.message)
           return
         }
         if (!filename) return // ability to ignore some objects
@@ -173,6 +196,7 @@ Helical.prototype.run = function(printNextSteps, changedFile) {
             fs.writeFileSync(filename, output)
             console.log('Wrote', filename)
           } catch (err) {
+            self.notify('Error', 'Error executing template')
             console.error('Error while executing template %s %s', generator.source, err.message)
           }
         } else {
@@ -190,19 +214,26 @@ Helical.prototype.run = function(printNextSteps, changedFile) {
     next(root, components, 0, [])
   })
 
+  var cb = () => {
+    if (printNextSteps) {
+      this.printNextSteps()
+    }
+    callback && callback()
+  }
+
   if (!changedFile) {
-    this.copyStaticFiles(path.join(basedir, 'static'))
+    this.copyStaticFiles(path.join(basedir, 'static'), cb)
   } else if (changedFile.indexOf('static/') === 0) {
     var outputFile = changedFile.substring('static/'.length)
     fse.copy(changedFile, path.join(this.output, outputFile), function(err) {
       if (err) {
+        self.notify('Error', 'Error copying file '+err.message)
         console.error('Error copying file', err.message)
       }
+      cb()
     })
-  }
-
-  if (printNextSteps) {
-    this.printNextSteps()
+  } else {
+    callback && callback()
   }
 }
 
@@ -238,6 +269,11 @@ if (module.id === require.main.id) {
         describe: 'Watch for changes in the data model file, manifest or templates, then re-run helical for the changed files',
         type: 'boolean',
       },
+      'notify': {
+        alias: 'n',
+        describe: 'Notify when there are errors during the build and notify also when the generators succeed again after previous errors',
+        type: 'boolean',
+      },
     })
     .wrap(require('yargs').terminalWidth())
     .help('h')
@@ -251,6 +287,7 @@ if (module.id === require.main.id) {
     helical.setGenerator(argv.generator)
     helical.setOutput(argv.output)
     helical.setForce(argv.force)
+    helical.setNotify(argv.notify)
 
     var options = {}
     helical.manifest.options.forEach(function(option) {
@@ -259,7 +296,7 @@ if (module.id === require.main.id) {
       options[option.name] = opt
     })
     yargs.options(options)
-    var argv = yargs.argv
+    argv = yargs.argv
     var optionValues = {}
     helical.manifest.options.forEach(function(option) {
       optionValues[option.name] = argv[option.name]
@@ -272,6 +309,7 @@ if (module.id === require.main.id) {
       helical.startWatching()
     }
   } catch (err) {
+    helical.notify('Error', 'Error '+err.message)
     console.error(err.message)
     process.exit(1)
   }

@@ -162,6 +162,12 @@ By default `helical` will not override existing files. But you can use the `--fo
 
 While developing helical generators or just to see interactively how the generators change when editing your data model, you can use the `--watch` option in the command line.
 
+Note: files starting with a dot (`.`) are ignored.
+
+# Error notifications
+
+If you want to get notified when an error occurs processing any file, parsing the model, etc. you can use the `--notify` option. Right now it only notifies about errors, but in a future it will notify if the whole process got fixed if you change any file and it was giving errors previously.
+
 # Installation
 
 ```
@@ -195,7 +201,7 @@ Wrote output/index.js
 
 You can avoid some objects to be processed by returning an empty file name in the `path` attribute of a generator. Example:
 
-```
+```json
 {
   "source": "endpoint.js",
   "path": "{% if object.action != 'delete' %}controllers/{{ ancestors[0].name | lower }}-{{ object.action | lower }}.js{% endif %}",
