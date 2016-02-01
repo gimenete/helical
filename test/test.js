@@ -94,8 +94,9 @@ describe('Helical', function() {
   it('#run', function(done) {
     var helical = new Helical()
     var model = path.join(__dirname, '../example/model.json')
+    var generator = path.join(__dirname, '../example')
     helical.setModel(model)
-    helical.setGenerator(path.join(__dirname, '../example'))
+    helical.setGenerator(generator)
     helical.setOutput(output)
     helical.setForce(true)
     helical.setNotify(false)
@@ -112,7 +113,7 @@ describe('Helical', function() {
 
       var date = fs.statSync(index).mtime
       setTimeout(function() {
-        helical.run(false, 'generators/app.js', function() {
+        helical.run(false, path.join(generator, 'generators/app.js'), function() {
           assert.ok(fs.statSync(index).mtime > date)
 
           helical.startWatching()

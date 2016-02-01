@@ -1,7 +1,7 @@
 {
   "name": "helical",
-  "version": "0.4.2",
-  "description": "",
+  "version": "0.4.3",
+  "description": "Helical is a general purpose code generator. It takes a data model definition and a set of templates (called generators) and generates an output",
   "main": "index.js",
   "scripts": {
     "test": "mocha",

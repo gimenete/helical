@@ -169,7 +169,7 @@ Helical.prototype.run = function(printNextSteps, changedFile, callback) {
       return
     }
     var source = fs.readFileSync(path.join(basedir, generator.source), 'utf8')
-    var components = generator.foreach.split('.')
+    var components = (generator.foreach || '').split('.')
     function next(parent, components, i, ancestors) {
       var component = components[i]
       if (!component) {

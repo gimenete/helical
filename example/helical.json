@@ -12,8 +12,7 @@
     },
     {
       "source": "generators/app.js",
-      "path": "index.js",
-      "foreach": ""
+      "path": "index.js"
     }
   ],
   "options": [
